@@ -74,33 +74,48 @@ public class SimpleSyntaxApp {
     
     private static void printBeginningDocument(PrintStream output, int outputType) {
         if(outputType == HTML_OUTPUT) output.print("<div id='annotated-doc'>");
+        if(outputType == XML_OUTPUT) output.print("<annotated-doc>");
     }
     
     private static void printEndDocument(PrintStream output, int outputType) {
         if(outputType == HTML_OUTPUT) output.print("</div><!--EDoc-->");
+        if(outputType == XML_OUTPUT) output.print("</annotated-doc>");
     }
     
     private static void printBeginningSentence(PrintStream output, int outputType) {
         if(outputType == HTML_OUTPUT) output.print("<div class='sentence'>");
+        if(outputType == XML_OUTPUT) output.print("<sentence>");
     }
     
     private static void printEndSentence(PrintStream output, int outputType) {
         if(outputType == HTML_OUTPUT) output.print("</div><!--ESent-->");
         if(outputType == TXT_OUTPUT) output.print("\n");
+        if(outputType == XML_OUTPUT) output.print("</sentence>");
     }
     
     private static void printBeginningSign(PrintStream output, int outputType, String type) {
         if(outputType == HTML_OUTPUT) output.print("<div class='sign " + type + "'>");
+        if(outputType == XML_OUTPUT) output.print("<sign type='" + type + "'>");
     }
     
     private static void printEndSign(PrintStream output, int outputType) {
         if(outputType == HTML_OUTPUT) output.print("</div><!--ESign-->");
+        if(outputType == XML_OUTPUT) output.print("</sign>");
     }
     
     private static void printSignType(PrintStream output, int outputType, String type) {
         if(outputType == HTML_OUTPUT) output.print(
                 "<div class='sign-label label-" + type + "'>" + type + "</div><!--ESL-->");
         if(outputType == TXT_OUTPUT) output.print(type + " ");
+    }
+    
+    private static void printToken(PrintStream output, int outputType, String token, String pos) {
+        if(outputType == TXT_OUTPUT) output.print(token);
+        if(outputType == XML_OUTPUT) {
+            if(token.trim().isEmpty()) output.print(" ");
+            else output.print("<token pos='" + pos + "'>" + token + "</token>");
+        }
+        if(outputType == HTML_OUTPUT) output.print(token);
     }
     
     private static void printStatistics(PrintStream output, HashMap<String, Integer> stats) {
@@ -156,9 +171,14 @@ public class SimpleSyntaxApp {
                 
                 if(token.getType().equals(ANNIEConstants.TOKEN_ANNOTATION_TYPE) ||
                    token.getType().equals(ANNIEConstants.SPACE_TOKEN_ANNOTATION_TYPE)) {
-                    outputStream.print(doc.getContent().getContent(
+                    printToken(outputStream, outputType, doc.getContent().getContent(
                             token.getStartNode().getOffset(), 
-                            token.getEndNode().getOffset()));
+                            token.getEndNode().getOffset()).toString(),
+                            token.getFeatures().containsKey("category") ? 
+                                    token.getFeatures().get("category").toString() : "");
+                    /*outputStream.print(doc.getContent().getContent(
+                            token.getStartNode().getOffset(), 
+                            token.getEndNode().getOffset()));*/
                 }
 
                 signs.inDocumentOrder().stream().forEach((sign) -> {
@@ -174,8 +194,10 @@ public class SimpleSyntaxApp {
             printEndSentence(outputStream, outputType);                        
         }
         printEndDocument(outputStream, outputType);
-        
-        printStatistics(outputStream, statistics);
+                
+        if(outputType == HTML_OUTPUT) {
+            printStatistics(outputStream, statistics);
+        }
     }
     
     public static CommandLine createCommandLineParser(String[] args) {
@@ -245,12 +267,13 @@ public class SimpleSyntaxApp {
 
             SignTagger processor = new SignTagger(props);
             
-            Document doc = Factory.newDocument(new File(args[0]).toURI().toURL());           
-            //Document doc = Factory.newDocument(new File("/home/dinel/Sandbox/OpenBookSignTagger/src/main/java/uk/ac/wlv/rgcl/openbooksigntagger/bug.txt").toURI().toURL());           
+            //Document doc = Factory.newDocument(new File(args[0]).toURI().toURL());           
+            Document doc = Factory.newDocument(new File("/home/dinel/Sandbox/OpenBookSignTagger/src/main/java/uk/ac/wlv/rgcl/openbooksigntagger/bug.txt").toURI().toURL());           
 
             processor.process(doc);
             //System.err.println(doc.toString());
-            SimpleSyntaxApp.printDocument(doc, HTML_OUTPUT);
+            //SimpleSyntaxApp.printDocument(doc, HTML_OUTPUT);
+            SimpleSyntaxApp.printDocument(doc, XML_OUTPUT);
         } catch (ResourceInstantiationException e) {
             Logger.getLogger(SimpleSyntaxApp.class.getName()).log(Level.SEVERE, null, e);
         } catch (GateException | IOException e) {
