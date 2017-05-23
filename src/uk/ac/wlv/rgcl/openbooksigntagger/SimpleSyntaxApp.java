@@ -207,12 +207,12 @@ public class SimpleSyntaxApp {
         
         Option displayFormat = Option.builder("of")
                 .longOpt("output-format")
+                .argName("format")
+                .hasArg()
                 .desc("specifies the format of the output. Valid values for "
-                        + "<format> are txt, xml and html")
-                .hasArg(true)
+                        + "<format> are txt, xml and html. The XML format is "
+                        + "the default one.")                
                 .build();
-        displayFormat.setArgs(1);
-        displayFormat.setArgName("format");        
         
         options.addOption(help);
         options.addOption(displayFormat);
@@ -221,10 +221,14 @@ public class SimpleSyntaxApp {
         CommandLine cmd = null;
         
         try {
+            HelpFormatter formatter = new HelpFormatter();
+            formatter.printHelp( "java <classpath> "
+                    + "uk.ac.wlv.rgcl.openbooksigntagger.SimpleSyntaxApp "
+                    + " [options] <input file>", options ); 
             cmd = parser.parse(options, args);
         } catch (ParseException ex) {
             HelpFormatter formatter = new HelpFormatter();
-            formatter.printHelp( "ant", options );       
+            formatter.printHelp( "Main", options );       
         }
         
         return cmd;
@@ -268,12 +272,18 @@ public class SimpleSyntaxApp {
             SignTagger processor = new SignTagger(props);
             
             //Document doc = Factory.newDocument(new File(args[0]).toURI().toURL());           
-            Document doc = Factory.newDocument(new File("/home/dinel/Sandbox/OpenBookSignTagger/src/main/java/uk/ac/wlv/rgcl/openbooksigntagger/bug.txt").toURI().toURL());           
+            String[] input_file = cmd.getArgs();
+            Document doc = Factory.newDocument(new File(input_file[0]).toURI().toURL());           
 
             processor.process(doc);
-            //System.err.println(doc.toString());
-            //SimpleSyntaxApp.printDocument(doc, HTML_OUTPUT);
-            SimpleSyntaxApp.printDocument(doc, XML_OUTPUT);
+            
+            int outputFormat = XML_OUTPUT;
+            if(cmd.hasOption("output-format")) {
+                if(cmd.getOptionValue("output-format").equals("html")) outputFormat = HTML_OUTPUT;
+                if(cmd.getOptionValue("output-format").equals("txt")) outputFormat = TXT_OUTPUT;
+            }                        
+            
+            SimpleSyntaxApp.printDocument(doc, outputFormat);
         } catch (ResourceInstantiationException e) {
             Logger.getLogger(SimpleSyntaxApp.class.getName()).log(Level.SEVERE, null, e);
         } catch (GateException | IOException e) {
