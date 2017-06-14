@@ -40,8 +40,7 @@ public class PropertiesLoader {
             input = new FileReader(new File("config.properties"));
             props = new Properties();
             props.load(input); 
-        } catch (FileNotFoundException ex) {
-            Logger.getLogger(PropertiesLoader.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (FileNotFoundException ex) {           
             throw new IOException("Configuration file cannot be found");
         }
     }

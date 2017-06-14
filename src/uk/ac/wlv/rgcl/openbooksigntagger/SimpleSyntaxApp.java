@@ -221,14 +221,12 @@ public class SimpleSyntaxApp {
         CommandLine cmd = null;
         
         try {
+            cmd = parser.parse(options, args);
+        } catch (ParseException ex) {
             HelpFormatter formatter = new HelpFormatter();
             formatter.printHelp( "java <classpath> "
                     + "uk.ac.wlv.rgcl.openbooksigntagger.SimpleSyntaxApp "
                     + " [options] <input file>", options ); 
-            cmd = parser.parse(options, args);
-        } catch (ParseException ex) {
-            HelpFormatter formatter = new HelpFormatter();
-            formatter.printHelp( "Main", options );       
         }
         
         return cmd;
